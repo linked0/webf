@@ -30,6 +30,19 @@ format :; forge fmt
 NETWORK_ARGS := --rpc-url http://localhost:8545 --private-key $(PRIVATE_KEY) --broadcast
 
 deploy:
-	forge script script/DeployEntryPoint.s.sol:EntryPoint $(NETWORK_ARGS)
+	forge script script/Deploy.s.sol:DeployScript $(NETWORK_ARGS)
 
+deploy-counter:
+	forge script script/DeployCounter.s.sol:DeployScript $(NETWORK_ARGS)
 
+# For deploying Interactions.s.sol:FundFundMe as well as for Interactions.s.sol:WithdrawFundMe we have to include a sender's address `--sender <ADDRESS>`
+SENDER_ADDRESS := 0x1811DfdE14b2e9aBAF948079E8962d200E71aCFD
+
+interact:
+	forge script script/Interactions.s.sol:ContractInteraction $(NETWORK_ARGS)
+
+interact-counter:
+	forge script script/Interactions.s.sol:CounterInteraction $(NETWORK_ARGS)
+
+interact-entry:
+	forge script script/Interactions.s.sol:EntryPointInteraction $(NETWORK_ARGS)

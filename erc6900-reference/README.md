@@ -29,9 +29,9 @@ forge test -vvvv --match-path test/account/UpgradeableModularAccount.t.sol --mat
 forge script script/Deploy.s.sol --private-key 0x58984b2bf6f0f3de4f38290ed3c541ac27bac384b378073ab133af8b314a1887 --rpc-url http://localhost:8545 --broadcast
 ```
 
-#### 24.11.06 Deployed
 First, it will fail because the .env file lacks addresses for the contracts, and the script compares the expected address in .env with the deployed addresses. So, you should first run the script to obtain the expected addresses, which will then be written in .env.
 
+For SMA_IMPL, you set the address of the SemiModularAccount contract even if SMA_TEST is set to false.
 ```
 # Factory owner capable only of managing stake
 OWNER=0x1811DfdE14b2e9aBAF948079E8962d200E71aCFD
@@ -43,7 +43,17 @@ ENTRYPOINT=0xaCA7A4F5E1111572C3764F9E5B4072AfA95593aB
 ACCOUNT_IMPL=0xDf24AE006565c66a5141653366A2e1AE6aB6D38E
 SINGLE_SIGNER_VALIDATION_MODULE=0x402466140cB7D09eF2e0b277165e2Ae214c2D6D0
 FACTORY=0xe9C4498d0e5701bDdf4F0832D4C1810f2af8aE7C
+
+SMA_IMPL=0xB34d87Dd2CA2d5Ee771510bA3615ECae0c1A0469
 ```
+
+## Interact with deployed contracts
+```
+make interact
+make interact-counter
+```
+
+If you use a EntryPoint for testing, use `docs/EntryPoint.sol` that has the functions like `getNumber` and `increaseNumber`. But you should use a script for interacting.
 
 ## Important callouts
 
