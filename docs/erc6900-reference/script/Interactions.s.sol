@@ -18,26 +18,37 @@ import {SemiModularAccount} from "../src/account/SemiModularAccount.sol";
 import {ExecutionManifest} from "../src/interfaces/IExecutionModule.sol";
 import {Call} from "../src/interfaces/IModularAccount.sol";
 import {ExecutionDataView} from "../src/interfaces/IModularAccountView.sol";
-import {ModuleEntityLib} from "../src/libraries/ModuleEntityLib.sol";
+import {ModuleEntity, ModuleEntityLib} from "../src/libraries/ModuleEntityLib.sol";
 import {ValidationConfigLib} from "../src/libraries/ValidationConfigLib.sol";
 import {TokenReceiverModule} from "../src/modules/TokenReceiverModule.sol";
 import {SingleSignerValidationModule} from "../src/modules/validation/SingleSignerValidationModule.sol";
 import {Counter} from "../test/mocks/Counter.sol";
+import {ModuleSignatureUtils} from "../test/utils/ModuleSignatureUtils.sol";
+import {TEST_DEFAULT_VALIDATION_ENTITY_ID as EXT_CONST_TEST_DEFAULT_VALIDATION_ENTITY_ID} from "../test/utils/TestConstants.sol";
 
-contract ContractInteraction is Script {
+contract ContractInteraction is Script, ModuleSignatureUtils {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
+    // Re-declare the constant to prevent derived test contracts from having to import it
+    uint32 public constant TEST_DEFAULT_VALIDATION_ENTITY_ID = EXT_CONST_TEST_DEFAULT_VALIDATION_ENTITY_ID;
+
     uint256 public constant CALL_GAS_LIMIT = 100_000;
     uint256 public constant VERIFICATION_GAS_LIMIT = 1_200_000;
+
+    address payable public beneficiary;
 
     bytes32 private _PROXY_BYTECODE_HASH;
     ReferenceModularAccount public accountOwner;
     ReferenceModularAccount public account1;
     ReferenceModularAccount public account2;
 
+    ModuleEntity internal _signerValidation;
+
     function run() external {
         console.log("Running ContractInteraction script");
+        beneficiary = payable(makeAddr("beneficiary"));
+
         address accountImpl = vm.envOr("ACCOUNT_IMPL", address(0));
         _PROXY_BYTECODE_HASH = keccak256(
             abi.encodePacked(type(ERC1967Proxy).creationCode, abi.encode(address(accountImpl), ""))
@@ -47,24 +58,25 @@ contract ContractInteraction is Script {
         SingleSignerValidationModule signerValidation = SingleSignerValidationModule(vm.envAddress("SINGLE_SIGNER_VALIDATION_MODULE"));
         Counter counter = Counter(payable(vm.envAddress("COUNTER")));
 
+        _signerValidation =
+            ModuleEntityLib.pack(address(signerValidation), TEST_DEFAULT_VALIDATION_ENTITY_ID);
+
         console.log("signerValidataion: ", address(signerValidation));
 
         uint256 ownerKey = vm.envOr("PRIVATE_KEY", uint256(0));
-        uint256 user1Key = vm.envOr("USER_KEY", uint256(0));
-        uint256 user2Key = vm.envOr("USER2_KEY", uint256(0));
         address owner = vm.envAddress("OWNER");
-        address user1 = vm.envAddress("USER_ADDRESS");
-        address user2 = vm.envAddress("USER2_ADDRESS");
 
+        // Get accountOwner
         accountOwner = factory.createAccount(owner, 100, 0);
-        account1 = factory.createAccount(user1, 100, 0);
-        account2 = factory.createAccount(user2, 100, 0);
+        console.log("code size of accountOwner: ", address(accountOwner).code.length);
 
         // print account id
+        console.log("Account Owner: ", address(accountOwner));
         console.log("Account Owner ID: ", accountOwner.accountId());
 
         uint256 nonce = entryPoint.getNonce(address(accountOwner), 0);
         console.log("Account Owner Nonce: ", nonce);
+
 
         // Make operation
         PackedUserOperation memory userOp = PackedUserOperation({
@@ -80,50 +92,24 @@ contract ContractInteraction is Script {
             paymasterAndData: "",
             signature: ""
         });
-        console.log("Before getUserOpHash", uint256(userOp.nonce));
 
+        console.log("Counter count after Boradcast: ", counter.number());
         vm.startBroadcast();
 
         // Generate signature
         bytes32 userOpHash = entryPoint.getUserOpHash(userOp);
         console.log("UserOp Hash: ", uint256(userOpHash));
         
-        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKey, userOpHash.toEthSignedMessageHash());
-        
-        vm.stopBroadcast();
-    }
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerKey, userOpHash.toEthSignedMessageHash());
+        userOp.signature = _encodeSignature(_signerValidation, GLOBAL_VALIDATION, abi.encodePacked(r, s, v));
 
-     // helper function to compress 2 gas values into a single bytes32
-    function _encodeGas(uint256 g1, uint256 g2) internal pure returns (bytes32) {
-        return bytes32(uint256((g1 << 128) + uint128(g2)));
-    }
-}
+        PackedUserOperation[] memory userOps = new PackedUserOperation[](1);
+        userOps[0] = userOp;
 
-contract EntryPointInteraction is Script {
-    using ECDSA for bytes32;
-    using MessageHashUtils for bytes32;
-
-    uint256 public constant CALL_GAS_LIMIT = 100_000;
-    uint256 public constant VERIFICATION_GAS_LIMIT = 1_200_000;
-
-    bytes32 private _PROXY_BYTECODE_HASH;
-    ReferenceModularAccount public accountOwner;
-    ReferenceModularAccount public account1;
-    ReferenceModularAccount public account2;
-
-    function run() external {
-        console.log("Running EntryInteraction script");
-        EntryPoint entryPoint = EntryPoint(payable(vm.envAddress("ENTRYPOINT")));
-
-        uint256 number = entryPoint.getNumber();
-        console.log("EntryPoint number: ", number);
-
-        vm.startBroadcast();
-        entryPoint.increaseNumber();
+        entryPoint.handleOps(userOps, beneficiary);
         vm.stopBroadcast();
 
-        number = entryPoint.getNumber();
-        console.log("EntryPoint number after Boradcast: ", number);
+        console.log("Counter count after Boradcast: ", counter.number());
     }
 
      // helper function to compress 2 gas values into a single bytes32

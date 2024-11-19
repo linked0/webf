@@ -43,6 +43,3 @@ interact:
 
 interact-counter:
 	forge script script/Interactions.s.sol:CounterInteraction $(NETWORK_ARGS)
-
-interact-entry:
-	forge script script/Interactions.s.sol:EntryPointInteraction $(NETWORK_ARGS)

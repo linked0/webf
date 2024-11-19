@@ -15,10 +15,6 @@ import {SingleSignerValidationModule} from "../src/modules/validation/SingleSign
 
 contract DeployScript is Script {
     bool private success = true;
-    address private ACCOUNT_IMPL = address(0);
-    address private SINGLE_SIGNER_VALIDATION_MODULE = address(0);
-    address private FACTORY = address(0);
-    address private SMA_IMPL = address(0);
 
     IEntryPoint public entryPoint;
 
@@ -53,10 +49,10 @@ contract DeployScript is Script {
 
         if (success) {
             console.log("ENTRYPOINT=", address(entryPoint));
-            console.log("ACCOUNT_IMPL=", ACCOUNT_IMPL);
-            console.log("SINGLE_SIGNER_VALIDATION_MODULE=", SINGLE_SIGNER_VALIDATION_MODULE);
-            console.log("FACTORY=", FACTORY);
-            console.log("SMA_IMPL=", SMA_IMPL);
+            console.log("ACCOUNT_IMPL=", accountImpl);
+            console.log("SINGLE_SIGNER_VALIDATION_MODULE=", singleSignerValidationModule);
+            console.log("FACTORY=", factory);
+            console.log("SMA_IMPL=", semiModularAccountImpl);
         }
         else {
             revert();
@@ -102,7 +98,7 @@ contract DeployScript is Script {
                 success = false;
                 return;
             }
-            ACCOUNT_IMPL = address(deployed);
+            accountImpl = address(deployed);
             console.log("Deployed AccountImpl at: ", address(deployed));
         } else {
             console.log("Code found at expected address, skipping deployment");
@@ -137,7 +133,7 @@ contract DeployScript is Script {
                 return;
             }
 
-            SMA_IMPL = address(deployed);
+            semiModularAccountImpl = address(deployed);
             console.log("Deployed SemiModularAccount at: ", address(deployed));
         } else {
             console.log("Code found at expected address, skipping deployment");
@@ -170,7 +166,7 @@ contract DeployScript is Script {
                 return;
             }
 
-            SINGLE_SIGNER_VALIDATION_MODULE = address(deployed);
+            singleSignerValidationModule = address(deployed);
             console.log("Deployed SingleSignerValidationModule at: ", address(deployed));
         } else {
             console.log("Code found at expected address, skipping deployment");
@@ -202,6 +198,7 @@ contract DeployScript is Script {
 
         if (expected == address(0) || addr.code.length == 0) {
             console.log("No code found at expected address, deploying...");
+            console.log("Deploying AccountFactory with accountImpl: ", address(accountImpl));
             AccountFactory deployed = new AccountFactory{salt: salt}(
                 entryPoint,
                 ReferenceModularAccount(payable(accountImpl)),
@@ -218,7 +215,7 @@ contract DeployScript is Script {
                 return;
             }
 
-            FACTORY = address(deployed);
+            factory = address(deployed);
             console.log("Deployed AccountFactory at: ", address(deployed));
         } else {
             console.log("Code found at expected address, skipping deployment");
@@ -228,16 +225,16 @@ contract DeployScript is Script {
     function _addStakeForFactory(uint32 unstakeDelay, uint256 stakeAmount) internal {
         console.log("Adding stake to factory");
 
-        uint256 currentStake = entryPoint.getDepositInfo(FACTORY).stake;
+        uint256 currentStake = entryPoint.getDepositInfo(factory).stake;
         console.log("Current stake: ", currentStake);
         uint256 stakeToAdd = stakeAmount - currentStake;
 
         if (stakeToAdd > 0) {
             console.log("Adding stake: ", stakeToAdd);
-            AccountFactory(FACTORY).addStake{value: stakeToAdd}(unstakeDelay);
-            console.log("Staked factory: ", address(FACTORY));
-            console.log("Total stake amount: ", entryPoint.getDepositInfo(address(FACTORY)).stake);
-            console.log("Unstake delay: ", entryPoint.getDepositInfo(address(FACTORY)).unstakeDelaySec);
+            AccountFactory(factory).addStake{value: stakeToAdd}(unstakeDelay);
+            console.log("Staked factory: ", address(factory));
+            console.log("Total stake amount: ", entryPoint.getDepositInfo(address(factory)).stake);
+            console.log("Unstake delay: ", entryPoint.getDepositInfo(address(factory)).unstakeDelaySec);
         } else {
             console.log("No stake to add");
         }
