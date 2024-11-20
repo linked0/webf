@@ -1,4 +1,23 @@
 # webf Foundry Example Project
+## Folder Summary
+
+### Folders for ERC6900 in src
+- account
+- helpers
+- interfaces
+- libraries
+- plugins
+- samples
+
+### Folders for ERC6900 in test
+- account
+- comparison
+- libraries
+- mocks
+- plugin
+- samples
+- utils
+
 ## How to use Foundry
 ### Instal submodule
 ```
@@ -59,12 +78,12 @@ forge create src/Counter.sol:Counter --rpc-url $RPC_URL_LOCALNET --private-key $
 
 ### Call for deployed contract
 ```
-cast send 0xdfA20C9408db8e3bD83037757dE43Fbb93c26D3B "increment()" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
+cast send $COUNTER_CONTRACT "increment()" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
 ```
 
 To get number.
 ```
-cast call 0xdfA20C9408db8e3bD83037757dE43Fbb93c26D3B "number()(uint256)" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
+cast call $COUNTER_CONTRACT "number()(uint256)" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
 ```
 
 If you have script for the calling, use the following command.
