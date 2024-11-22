@@ -25,8 +25,84 @@ contract CreateAccount is Script {
     }
 
     function run() external returns (address) {
-        address owner = vm.envAddress("OWNER");
+        address owner1 = vm.envAddress("OWNER1");
         uint256 salt = vm.envUint("SALT");
+        console.log("owner:", owner1);
+        console.log("salt:", salt);
+
+        address accountImplementation = vm.envAddress(
+            "UPGRADEABLE_MODULAR_ACCOUNT_ADDRESS"
+        );
+        address singleOwnerPluginAddr = vm.envAddress(
+            "SINGLE_OWNER_PLUGIN_ADDRESS"
+        );
+        SingleOwnerPlugin singleOwnerPlugin = SingleOwnerPlugin(
+            singleOwnerPluginAddr
+        );
+
+        address addr = Create2.computeAddress(
+            getSalt(owner1, salt),
+            _PROXY_BYTECODE_HASH
+        );
+
+        vm.startBroadcast();
+        // short circuit if exists
+        if (addr.code.length == 0) {
+            address[] memory plugins = new address[](1);
+            plugins[0] = address(singleOwnerPlugin);
+            bytes32[] memory pluginManifestHashes = new bytes32[](1);
+            pluginManifestHashes[0] = keccak256(
+                abi.encode(singleOwnerPlugin.pluginManifest())
+            );
+            bytes[] memory pluginInstallData = new bytes[](1);
+            pluginInstallData[0] = abi.encode(owner1);
+            // not necessary to check return addr since next call will fail if so
+            new ERC1967Proxy{salt: getSalt(owner1, salt)}(
+                address(accountImplementation),
+                ""
+            );
+        }
+        vm.stopBroadcast();
+        return addr;
+    }
+
+    /**
+     * calculate the counterfactual address of this account as it would be returned by createAccount()
+     */
+    function getAddress(
+        address owner,
+        uint256 salt
+    ) public view returns (address) {
+        return
+            Create2.computeAddress(getSalt(owner, salt), _PROXY_BYTECODE_HASH);
+    }
+
+    function getSalt(
+        address owner,
+        uint256 salt
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(owner, salt));
+    }
+}
+
+contract CreateAccount2 is Script {
+    bytes32 private immutable _PROXY_BYTECODE_HASH;
+
+    constructor() {
+        address modularAccount = vm.envAddress(
+            "UPGRADEABLE_MODULAR_ACCOUNT_ADDRESS"
+        );
+        _PROXY_BYTECODE_HASH = keccak256(
+            abi.encodePacked(
+                type(ERC1967Proxy).creationCode,
+                abi.encode(address(modularAccount), "")
+            )
+        );
+    }
+
+    function run() external returns (address) {
+        address owner = vm.envAddress("OWNER2");
+        uint256 salt = vm.envUint("OWNER2_SALT");
         console.log("owner:", owner);
         console.log("salt:", salt);
 

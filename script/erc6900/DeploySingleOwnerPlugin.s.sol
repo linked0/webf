@@ -6,9 +6,11 @@ import {EntryPoint} from "@eth-infinitism/account-abstraction/core/EntryPoint.so
 import {SingleOwnerPlugin} from "@erc6900/plugins/owner/SingleOwnerPlugin.sol";
 
 contract DeploySingleOwnerPlugin is Script {
+    SingleOwnerPlugin public plugin;
+
     function run() external returns (SingleOwnerPlugin) {
         vm.startBroadcast();
-        SingleOwnerPlugin plugin = new SingleOwnerPlugin();
+        plugin = new SingleOwnerPlugin();
         vm.stopBroadcast();
 
         return plugin;

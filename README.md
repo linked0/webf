@@ -69,14 +69,14 @@ forge test --match-contract CounterTest
 forge clean
 ```
 
-### Deploy
-
+### Deploy & Use accounts
+#### Counter
 ```shell
 source .env
 forge create src/Counter.sol:Counter --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
 ```
 
-### Call for deployed contract
+Call for deployed contract
 ```
 cast send $COUNTER_CONTRACT "increment()" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
 ```
@@ -90,6 +90,52 @@ If you have script for the calling, use the following command.
 ```
 forge script script/CounterIncrease.s.sol:CallIncrease --rpc-url $RPC_URL_LOCALNET --broadcast
 ```
+
+#### EntryPoint
+`forge create` 쓰면 편한데 일단 만들어 놓은 `DeployEntryPont.s.sol` 사용.
+```shell
+source .env
+forge script script/erc6900/DeployEntryPoint.s.sol:DeployEntryPoint --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+```
+
+#### SingleOwnerPlugin
+`forge create` 쓰면 편한데 일단 만들어 놓은 `DeploySingleOwnerPlugin.s.sol` 사용.
+```shell
+source .env
+forge script script/erc6900/DeploySingleOwnerPlugin.s.sol:DeploySingleOwnerPlugin --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+```
+
+#### Deploy ModularAccount and create account
+`forge create` 쓰면 편한데 일단 만들어 놓은 `DeploySingleOwnerPlugin.s.sol` 사용.
+```shell
+source .env
+forge script script/erc6900/DeployModularAccount.s.sol:DeployModularAccount --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+```
+
+Create account 1
+```shell
+source .env
+forge script script/erc6900/CreateAccount.s.sol:CreateAccount --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+```
+
+Create account 2
+```shell
+source .env
+forge script script/erc6900/CreateAccount.s.sol:CreateAccount2 --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+```
+
+#### EntryPoint basic operation
+Send ETH
+```shell
+forge script script/erc6900/CallEntryPoint.s.sol:BasicUserOpEthSend --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast
+```
+
+Contract Interaction
+```shell
+source .env
+forge script script/erc6900/CallEntryPoint.s.sol:BasicUserOpInteract --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast
+```
+
 ### Format
 
 ```shell
@@ -127,3 +173,16 @@ $ cast --help
 ## Documentation
 
 https://book.getfoundry.sh/
+
+
+## History
+#### 24.11.22
+- Error occured in running BasicUserOpInteract.
+- Check following error. I think I should add storage variable for error log.
+  ```
+   [16773] 0xbcB08b651fB6319727c44eE093162764F9A4340A::handleOps([UserOperation({ sender: 0x8AbC9EDD763423979bbca4BB63636963d7cCb75B, nonce: 0, initCode: 0x, callData: 0xb61d27f600000000000000000000000064ff699b1caf990594d96bbe16ca77129b35736e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000004d09de08a00000000000000000000000000000000000000000000000000000000, callGasLimit: 50000 [5e4], verificationGasLimit: 1200000 [1.2e6], preVerificationGas: 0, maxFeePerGas: 1, maxPriorityFeePerGas: 1, paymasterAndData: 0x, signature: 0x506a559c725b54783682498ec27b15fc7cf206a4d06246fbb09cd4e09a23916935266dece1417d6c481583f310a8f02adfa508271bf0416723c9b32f38043e691c })], beneficiary: [0x5c4d2bd3510C8B51eDB17766d3c96EC637326999])
+    │   ├─ [0] 0x8AbC9EDD763423979bbca4BB63636963d7cCb75B::validateUserOp(UserOperation({ sender: 0x8AbC9EDD763423979bbca4BB63636963d7cCb75B, nonce: 0, initCode: 0x, callData: 0xb61d27f600000000000000000000000064ff699b1caf990594d96bbe16ca77129b35736e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000004d09de08a00000000000000000000000000000000000000000000000000000000, callGasLimit: 50000 [5e4], verificationGasLimit: 1200000 [1.2e6], preVerificationGas: 0, maxFeePerGas: 1, maxPriorityFeePerGas: 1, paymasterAndData: 0x, signature: 0x506a559c725b54783682498ec27b15fc7cf206a4d06246fbb09cd4e09a23916935266dece1417d6c481583f310a8f02adfa508271bf0416723c9b32f38043e691c }), 0x286cea5f565418d5bc50c33fb165308dead48fba7fb05759a82671b698da4ff6, 1250000 [1.25e6])
+    │   │   └─ ← [Stop] 
+    │   └─ ← [Revert] EvmError: Revert
+    └─ ← [Revert] EvmError: Revert
+  ```

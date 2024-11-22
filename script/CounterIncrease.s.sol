@@ -10,11 +10,12 @@ contract CallIncrease is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address myContractAddress = vm.envAddress("COUNTER_CONTRACT");
 
+        console.log(deployerPrivateKey, myContractAddress);
+        // Load the contract
+        Counter myContract = Counter(myContractAddress);
+
         // Start broadcasting the transaction
         vm.startBroadcast(deployerPrivateKey);
-
-        // Create an instance of the deployed contract
-        Counter myContract = Counter(myContractAddress);
 
         // Call the `increase` function
         myContract.increment();
