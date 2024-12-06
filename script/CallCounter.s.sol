@@ -26,3 +26,26 @@ contract CallIncrease is Script {
         vm.stopBroadcast();
     }
 }
+
+contract GenerateRevert is Script {
+    function run() external {
+        // Load environment variables
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address myContractAddress = vm.envAddress("COUNTER_CONTRACT");
+
+        console.log(deployerPrivateKey, myContractAddress);
+        // Load the contract
+        Counter myContract = Counter(myContractAddress);
+
+        // Start broadcasting the transaction
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Call the `increase` function
+        myContract.genRevert();
+
+        console.log("Successfully called `increment` on:", myContractAddress);
+
+        // Stop broadcasting
+        vm.stopBroadcast();
+    }
+}

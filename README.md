@@ -31,6 +31,23 @@ forge install https://github.com/OpenZeppelin/openzeppelin-contracts
 forge remappings
 ```
 
+## Source
+Before testing, the next two codes should be commented out.
+1. EntryPoint.sol innerHandleOp function
+```
+if (preGas < callGasLimit + mUserOp.verificationGasLimit + 5000) {
+  assembly {
+      mstore(0, INNER_OUT_OF_GAS)
+      revert(0, 32)
+  }
+}
+```
+
+2. EntryPoint.sol handleOps function
+```
+_compensate(beneficiary, collected);
+```
+
 ## Setup
 ### Init dependencies
 If you have .gitmodules file, just do the following.
@@ -72,68 +89,67 @@ forge clean
 ### Deploy & Use accounts
 #### Counter
 ```shell
-source .env
-forge create src/Counter.sol:Counter --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
+source .env; forge create src/Counter.sol:Counter --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
 ```
 
 Call for deployed contract
 ```
-cast send $COUNTER_CONTRACT "increment()" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
+source .env; cast send $COUNTER_CONTRACT "increment()" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
 ```
 
 To get number.
 ```
-cast call $COUNTER_CONTRACT "number()(uint256)" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
+source .env; cast call $COUNTER_CONTRACT "number()(uint256)" --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY
 ```
 
 If you have script for the calling, use the following command.
 ```
-forge script script/CounterIncrease.s.sol:CallIncrease --rpc-url $RPC_URL_LOCALNET --broadcast
+source .env; forge script script/CallCounter.s.sol:CallIncrease --rpc-url $RPC_URL_LOCALNET --broadcast
+```
+
+To generate revert,
+```
+source .env; forge script script/CallCounter.s.sol:GenerateRevert --rpc-url $RPC_URL_LOCALNET --broadcast
+```
 ```
 
 #### EntryPoint
 `forge create` 쓰면 편한데 일단 만들어 놓은 `DeployEntryPont.s.sol` 사용.
 ```shell
-source .env
-forge script script/erc6900/DeployEntryPoint.s.sol:DeployEntryPoint --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+source .env; forge script script/erc6900/DeployEntryPoint.s.sol:DeployEntryPoint --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
 ```
 
 #### SingleOwnerPlugin
 `forge create` 쓰면 편한데 일단 만들어 놓은 `DeploySingleOwnerPlugin.s.sol` 사용.
 ```shell
-source .env
-forge script script/erc6900/DeploySingleOwnerPlugin.s.sol:DeploySingleOwnerPlugin --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+source .env; forge script script/erc6900/DeploySingleOwnerPlugin.s.sol:DeploySingleOwnerPlugin --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
 ```
 
 #### Deploy ModularAccount and create account
 `forge create` 쓰면 편한데 일단 만들어 놓은 `DeploySingleOwnerPlugin.s.sol` 사용.
 ```shell
-source .env
-forge script script/erc6900/DeployModularAccount.s.sol:DeployModularAccount --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+source .env; forge script script/erc6900/DeployModularAccount.s.sol:DeployModularAccount --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
 ```
 
 Create account 1
 ```shell
-source .env
-forge script script/erc6900/CreateAccount.s.sol:CreateAccount --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+source .env; forge script script/erc6900/CreateAccount.s.sol:CreateAccount --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast -vvvv
 ```
 
 Create account 2
 ```shell
-source .env
-forge script script/erc6900/CreateAccount.s.sol:CreateAccount2 --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast 
+source .env; forge script script/erc6900/CreateAccount.s.sol:CreateAccount2 --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast -vvvv
 ```
 
 #### EntryPoint basic operation
-Send ETH
-```shell
-forge script script/erc6900/CallEntryPoint.s.sol:BasicUserOpEthSend --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast
-```
-
 Contract Interaction
 ```shell
-source .env
-forge script script/erc6900/CallEntryPoint.s.sol:BasicUserOpInteract --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast
+source .env; forge script script/erc6900/CallEntryPoint.s.sol:BasicUserOpInteract --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast -vvvv
+```
+
+Send ETH
+```shell
+source .env; forge script script/erc6900/CallEntryPoint.s.sol:BasicUserOpEthSend --rpc-url $RPC_URL_LOCALNET --private-key $PRIVATE_KEY --broadcast -vvvv
 ```
 
 ### Format
