@@ -1,4 +1,7 @@
 # webf Foundry Example Project
+## Basic Information
+- [Summary Paper](https://docs.google.com/document/d/1zGVPEFovJo43W6W3OJ4N8kzh0eJSqUe-jrAhZ3cm8kI/edit?tab=t.0)
+
 ## Folder Summary
 
 ### Folders for ERC6900 in src
@@ -192,6 +195,30 @@ https://book.getfoundry.sh/
 
 
 ## History
+#### 24.12.08
+- 현재 ERC6900 implementation에서 다음의 서브모듈(커밋해시 주의!)를 사용하고 있음.
+  - account abstraction: 187613b0172c3a21cf3496e12cdfa24af04fb510
+  - openzeppelin: e1b3d8c7ee2c97868f4ab107fe8b7e19f0a8db9f
+- 현재 erc6900/reference-implementation에서 포크한 버전에 맞춰진 것임. 
+  - 최신버전에서는  `ReferenceModularAccount.sol`를 사용하는데, 원래 가지고 있던 코드에서는 `UpgradeableModularAccount`를 사용하고 있어서 계속 그것을 사용함.
+  - 문제가 되는 것은 최신버전은 `PackedUserOperation`을 사용하는데, 원래 가지고 있던 코드에서는 `UserOperation`를 사용함. 이걸 다시 수정해서 테스틑하는 것은 비효율적이라고 판단.
+  - 따라서, `UserOperation` 스트럭처를 사용하는 account abstraction 커밋을 찾을수 밖에 없었음.
+- 결과적으로 다음의 코드를 주석처리해야 script코드가 정상적으로 작동됨
+  - 그렇지 않으면 전체적으로 코드는 성공이라고 나오는게 결국에는 실패하는 현상이 생김
+  - lib/account-abstraction/contracts/core/EntryPoint.sol
+    ```solidity
+    function innerHandleOp(bytes memory callData, UserOpInfo memory opInfo, bytes calldata context) external returns (uint256 actualGasCost) {
+      ...
+      unchecked {
+          if (gasleft() < callGasLimit + mUserOp.verificationGasLimit + 5000) {
+            // assembly {
+            //     mstore(0, INNER_OUT_OF_GAS)
+            //     revert(0, 32)
+            // }
+        }
+      }
+    ```
+
 #### 24.11.22
 - Error occured in running BasicUserOpInteract.
 - Check following error. I think I should add storage variable for error log.
