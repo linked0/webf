@@ -33,3 +33,6 @@ deploy-sop-local:; forge script script/erc6900/DeploySingleOnwerPlugin.s.sol --r
 create-account-local:; forge script script/erc6900/CreateAccount.s.sol --rpc-url localnet --private-key $(PRIVATE_KEY) --broadcast 
 
 initialize-account-local:; forge script -vvvv script/erc6900/InitializeAccount.s.sol --rpc-url localnet --private-key $(PRIVATE_KEY) --broadcast 
+
+testp:; forge test -vvvv --match-test test_passERC721Transfer
+testp2:; forge test -vvvv --match-contract TokenReceiverPluginTest
