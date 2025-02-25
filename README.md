@@ -58,7 +58,7 @@ If you have .gitmodules file, just do the following.
 git submodule update --init 
 ```
 ### Build
-
+이거면 `git submodule update --init`까지 다 됨
 ```shell
 forge build
 ```
