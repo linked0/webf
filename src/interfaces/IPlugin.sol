@@ -58,14 +58,14 @@ struct SelectorPermission {
 }
 
 /// @dev A struct holding fields to describe the plugin in a purely view context. Intended for front end clients.
-struct PluginMetadata {
-    // A human-readable name of the plugin.
+struct PluginMetadata {// A human-readable name of the plugin.
     string name;
     // The version of the plugin, following the semantic versioning scheme.
     string version;
     // The author field SHOULD be a username representing the identity of the user or organization
     // that created this plugin.
     string author;
+
     // String desciptions of the relative sensitivity of specific functions. The selectors MUST be selectors for
     // functions implemented by this plugin.
     SelectorPermission[] permissionDescriptors;
