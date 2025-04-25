@@ -6,10 +6,19 @@ import {Counter} from "../src/Counter.sol";
 
 contract CounterTest is Test {
     Counter public counter;
+    struct Data {
+        uint256 x;
+        uint256 y;
+    }
+    /// Two independent storage slots
+    Data public slotA;
+    Data public slotB;
 
     function setUp() public {
         counter = new Counter();
         counter.setNumber(0);
+
+        slotB = slotA;
     }
 
     function test_Increment() public {

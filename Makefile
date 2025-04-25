@@ -36,3 +36,5 @@ initialize-account-local:; forge script -vvvv script/erc6900/InitializeAccount.s
 
 testp:; forge test -vvvv --match-test test_passERC721Transfer
 testp2:; forge test -vvvv --match-contract TokenReceiverPluginTest
+
+testb:; forge test -vvv --match-contract AllBasicTest
